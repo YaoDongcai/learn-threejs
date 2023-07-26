@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import World from "./components/world.vue";
-
+// import World from "./components/world.vue";
+import webGL from "./components/webGL.vue";
 </script>
 
 <template>
   
-  <world />
+  <!-- <world /> -->
+  <webGL />
 </template>
 
 <style scoped>
