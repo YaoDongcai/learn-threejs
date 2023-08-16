@@ -2,7 +2,6 @@
     <canvas  ref="container" id="container" class="container"></canvas>
 </template>
    <script setup lang="ts">
-   // 以下的例子是可以在canvas 鼠标点击生成一个新的点位信息
    import { onMounted, ref } from "vue";
    import {initShaders} from '../libs/initShaders'
    // 通过鼠标来点击当前的视图来不断显示点位信息
@@ -11,8 +10,11 @@
    const container = ref()
    // 初始化定点
    function initVertexBuffers(gl: WebGLRenderingContext): number {
-    var vertices = new Float32Array([0.0,0.5,-0.5,-0.5,-0.5,-0.5])
-    var n=3;
+    // var vertices = new Float32Array([
+    //     0, 0.5, -0.5, -0.5, 0.5, -0.5 //these are the coordinates of the vertices stored in an artray for us
+    // ]);
+    var vertices = new Float32Array([-0.5,0.5,-0.5,-0.5,0.5,0.5,0.5,-0.5])
+    var n=4;
     // 创建缓冲区
     var vertexBuffers = gl.createBuffer();
     // 绑定缓存区域
@@ -24,6 +26,34 @@
     gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0,0)
     // 开启attribute变量
     gl.enableVertexAttribArray(a_Position);
+    
+
+    // var n = 3; //this is the number of vertices and what is checkedf later
+
+    //create a buffer object
+    // var vertexBuffer = gl.createBuffer();
+    // if (!vertexBuffer) { //error for if the buffer object can't be created
+    //     console.log('Failed to create the buffer object');
+    //     return -1;
+    // }
+
+    // //binds trhe buffer object to target
+    // gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+
+    // //this writes data into the buffeer object
+    // gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+    // var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+    // if (a_Position < 0) { //lets us know if everything is working
+    //     console.log('Failed to get the storage location of a_Position');
+    //     return -1;
+    // }
+
+    // //assigns the buffer object to a_Position variable
+    // gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+
+    // //enables assignment to a_position
+    // gl.enableVertexAttribArray(a_Position);
     return n;
    }
    onMounted(() => {
@@ -42,10 +72,8 @@
         gl_PointSize = 5.0;
      }`
      var FSHADER_SOURCE = `
-     precision mediump float;
-     uniform vec4 u_FragColor;
      void main() {
-        gl_FragColor = u_FragColor;
+        gl_FragColor = vec4(0.0,0.0,1.0,1.0);
      }`
     
 
@@ -58,43 +86,18 @@
      
  // initShaders
     initShaders(gl,VSHADRE_SOURCE, FSHADER_SOURCE);
-    
+    const n = initVertexBuffers(gl);
     // 获取gl的变量 get Position
-    console.log('--gl', gl.program)
-   var a_Position = gl.getAttribLocation(gl.program, 'a_Position')
-    var u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor')
-    gl.uniform4f(u_FragColor, 0.0, 1.0,1.0,1.0)
-    gl.vertexAttrib3f(a_Position, 0.0,0.0,0.0)
 
+//    var a_Position = gl.getAttribLocation(gl.program, 'a_Position')
+    // var u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor')
+    // gl.uniform4f(u_FragColor, 0.0, 1.0,1.0,1.0)
+    // gl.vertexAttrib3f(a_Position, 0.0,0.0,0.0)
     gl.clearColor(0,0,0,1);
     gl.clear(gl.COLOR_BUFFER_BIT);
-    // const n = initVertexBuffers(gl);
-    gl.drawArrays(gl.POINTS,0, 1) // position and count
-    dom.onmousedown = function(ev: MouseEvent) {
-        let x = ev.clientX;
-        let y = ev.clientY;
-        //rect 大小
-        const target = ev.target as HTMLElement
-        const rect = target.getBoundingClientRect();
-        // 需要对这个坐标进行转换
-        x = ((x- rect.left) - dom.clientHeight/2)/(dom.clientHeight/2)
-        y = (dom.clientWidth/2 - (y-rect.top))/(dom.clientWidth/2)
-        // g_Points.push(x);
-        // g_Points.push(y);
-        // 开始设置象限来设置颜色
-        let color = [];
-        if(x >=0.0 && y >= 0.0) {
-            color = [1.0, 0.0,0.0,1.0]
-        } else if(x <0.0 && y < 0.0) {
-            color = [0.0, 1.0,0.0,1.0]
-        }else {
-            color = [1.0, 1.0,1.0,1.0]
-        }
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.vertexAttrib3f(a_Position, x, y, 0.0)
-        gl.uniform4f(u_FragColor, color[0], color[1], color[2], color[3])
-        gl.drawArrays(gl.POINTS,0, 1) // position and count
-     } 
+
+    console.log('---n', n)
+    gl.drawArrays(gl.TRIANGLE_STRIP,0, n) // position and count
     //  ctx.fillStyle = 'rgba(0,0,255,1.0)'
     //  ctx.fillRect(120,10,120,100);
    })

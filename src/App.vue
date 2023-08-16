@@ -1,12 +1,15 @@
 <script setup lang="ts">
 // import World from "./components/world.vue";
-import webGL from "./components/webGL.vue";
+// import webGL from "./components/webGL.vue";
+// import webGL from "./components/webGL2.vue";
+// import board from './components/board.vue';
 </script>
 
 <template>
   
   <!-- <world /> -->
-  <webGL />
+  <!-- <webGL /> -->
+  <router-view></router-view>
 </template>
 
 <style scoped>
