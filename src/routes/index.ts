@@ -2,6 +2,7 @@
 import { createRouter, createWebHashHistory} from 'vue-router'
 import Board  from "../components/board.vue"
 import World from '../components/world.vue'
+import FabricCanvas from '../components/fabric.vue'
 const routes = [
     {
         path: '/',
@@ -10,6 +11,10 @@ const routes = [
     {
         path: '/board',
         component:Board
+    },
+    {
+        path: '/fabric',
+        component: FabricCanvas
     }
 ]
 

@@ -11,7 +11,7 @@ import WhiteBoard from '../libs/WhiteBoard'
 onMounted(() => {
     const canvas = document.getElementById('whiteboard') as HTMLCanvasElement;
     const lineWidthSlider = document.getElementById('lineWidthSlider') as HTMLInputElement;
-    const whiteboard = new WhiteBoard(canvas, lineWidthSlider);
+    const whiteboard = new WhiteBoard(canvas);
 })
 
 </script>
