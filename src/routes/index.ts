@@ -9,6 +9,7 @@ import Lesson03 from '../components/lesson03.vue'
 import Lesson04 from '../components/lesson04.vue'
 import Lesson05 from '../components/lesson05.vue'
 import Lesson06 from '../components/lesson06.vue'
+import Lesson07 from '../components/lesson07.vue'
 const routes = [
     {
         path: '/',
@@ -40,6 +41,9 @@ const routes = [
     },{
         path: '/less06',
         component: Lesson06
+    },{
+        path: '/less07',
+        component: Lesson07
     }
 ]
 
