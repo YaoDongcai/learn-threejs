@@ -12,6 +12,7 @@
     "@types/fabric": "^5.3.3",
     "@types/three": "^0.154.0",
     "fabric": "^5.3.0",
+    "gl-matrix": "^3.4.3",
     "three": "^0.154.0",
     "vue": "^3.2.45",
     "vue-router": "^4.2.4"
