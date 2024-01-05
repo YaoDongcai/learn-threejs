@@ -10,6 +10,8 @@ const canvas = ref<HTMLElement>();
 // Get a reference to the container element that will hold our scene
 const container = canvas.value;
 console.log('---container   ', container)
+const navigator = window.navigator
+console.log('---navigator ', navigator)
 if(!container) return;
 // create a Scene
 const scene = new Scene();
