@@ -13,49 +13,114 @@ import Lesson07 from '../components/lesson07.vue'
 import Lesson08 from '../components/lesson08.vue'
 import Lesson09 from '../components/HelloWorld.vue'
 import Lesson10 from '../components/lesson10.vue'
-const routes = [
+export const routes = [
     {
         path: '/',
-        component: World
+        component: World,
+        name: '/',
+        meta: {
+            title: '首页',
+            icon: 'UserFilled',
+          },
     },
     {
         path: '/board',
-        component:Board
+        name: 'board',
+        component:Board,
+        meta: {
+            title: 'board',
+            icon: 'UserFilled',
+          },
     },
     {
         path: '/fabric',
-        component: FabricCanvas
+        name: 'fabric',
+        component: FabricCanvas,
+        meta: {
+            title: 'fabric',
+            icon: 'UserFilled',
+          },
     },{
         path: '/less01',
-        component: Lesson01
+        name: 'less01',
+        component: Lesson01,
+        meta: {
+            title: 'less01',
+            icon: 'UserFilled',
+          },
     }
     ,{
         path: '/less02',
-        component: Lesson02
+        name: 'less02',
+        component: Lesson02,
+        meta: {
+            title: 'less02',
+            icon: 'UserFilled',
+          },
     },{
         path: '/less03',
-        component: Lesson03
+        name: 'less03',
+        component: Lesson03,
+        meta: {
+            title: 'less03',
+            icon: 'UserFilled',
+          },
     },{
         path: '/less04',
-        component: Lesson04
+        name: 'less04',
+        component: Lesson04,
+        meta: {
+            title: 'less04',
+            icon: 'UserFilled',
+          },
     },{
         path: '/less05',
-        component: Lesson05
+        name: 'less05',
+        component: Lesson05,
+        meta: {
+            title: 'less05',
+            icon: 'UserFilled',
+          },
     },{
         path: '/less06',
-        component: Lesson06
+        name: 'less06',
+        component: Lesson06,
+        meta: {
+            title: 'less06',
+            icon: 'UserFilled',
+          },
     },{
         path: '/less07',
-        component: Lesson07
+        name: 'less07',
+        component: Lesson07,
+        meta: {
+            title: 'less07',
+            icon: 'UserFilled',
+          },
     }, {
         path: '/less08',
-        component: Lesson08
+        name: 'less08',
+        component: Lesson08,
+        meta: {
+            title: 'less08',
+            icon: 'UserFilled',
+          },
     }, {
         path: '/less09',
-        component: Lesson09
+        name: 'less09',
+        component: Lesson09,
+        meta: {
+            title: 'less09',
+            icon: 'UserFilled',
+          },
     },{
         path: '/less10',
-        component: Lesson10
+        name: 'less10',
+        component: Lesson10,
+        meta: {
+            title: 'less10',
+            icon: 'UserFilled',
+          },
     }
 ]
 
