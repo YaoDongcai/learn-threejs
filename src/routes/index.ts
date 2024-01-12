@@ -1,18 +1,20 @@
 
 import { createRouter, createWebHashHistory} from 'vue-router'
-import Board  from "../components/board.vue"
-import World from '../components/world.vue'
-import FabricCanvas from '../components/fabric.vue'
-import Lesson01 from '../components/lesson01.vue'
-import Lesson02 from '../components/lesson02.vue'
-import Lesson03 from '../components/lesson03.vue'
-import Lesson04 from '../components/lesson04.vue'
-import Lesson05 from '../components/lesson05.vue'
-import Lesson06 from '../components/lesson06.vue'
-import Lesson07 from '../components/lesson07.vue'
-import Lesson08 from '../components/lesson08.vue'
-import Lesson09 from '../components/HelloWorld.vue'
-import Lesson10 from '../components/lesson10.vue'
+import Board  from "../views/board.vue"
+import World from '../views/world.vue'
+import FabricCanvas from '../views/fabric.vue'
+import Lesson01 from '../views/lesson01.vue'
+import Lesson02 from '../views/lesson02.vue'
+import Lesson03 from '../views/lesson03.vue'
+import Lesson04 from '../views/lesson04.vue'
+import Lesson05 from '../views/lesson05.vue'
+import Lesson06 from '../views/lesson06.vue'
+import Lesson07 from '../views/lesson07.vue'
+import Lesson08 from '../views/lesson08.vue'
+import Lesson09 from '../views/HelloWorld.vue'
+import Lesson10 from '../views/lesson10.vue'
+import Lesson11 from '../views/Lesson11.vue'
+import Lesson12 from '../views/Lesson12.vue'
 export const routes = [
     {
         path: '/',
@@ -121,6 +123,23 @@ export const routes = [
             title: 'less10',
             icon: 'UserFilled',
           },
+    },{
+      path: '/less11',
+      name: 'less11',
+      component: Lesson11,
+      meta: {
+        title: '图片处理',
+        icon: 'UserFilled'
+      }
+    }, {
+      
+      path: '/less12',
+      name: 'lesson12',
+      component: Lesson12,
+      meta: {
+        title: 'ResizeBox',
+        icon: 'UserFilled'
+      }
     }
 ]
 
