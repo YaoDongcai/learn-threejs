@@ -3,6 +3,7 @@ import { createRouter, createWebHashHistory} from 'vue-router'
 import Board  from "../views/board.vue"
 import World from '../views/world.vue'
 import FabricCanvas from '../views/fabric.vue'
+import Three01 from '../views/three-1.vue'
 import Lesson01 from '../views/lesson01.vue'
 import Lesson02 from '../views/lesson02.vue'
 import Lesson03 from '../views/lesson03.vue'
@@ -13,8 +14,8 @@ import Lesson07 from '../views/lesson07.vue'
 import Lesson08 from '../views/lesson08.vue'
 import Lesson09 from '../views/HelloWorld.vue'
 import Lesson10 from '../views/lesson10.vue'
-import Lesson11 from '../views/Lesson11.vue'
-import Lesson12 from '../views/Lesson12.vue'
+import Lesson11 from '../views/lesson11.vue'
+import Lesson12 from '../views/lesson12.vue'
 export const routes = [
     {
         path: '/',
@@ -24,6 +25,16 @@ export const routes = [
             title: '首页',
             icon: 'UserFilled',
           },
+    },
+    {
+      path: '/three-01',
+        name: 'three01',
+        component:Three01,
+        meta: {
+            title: 'Three01 第一课',
+            icon: 'UserFilled',
+          },
+      
     },
     {
         path: '/board',
