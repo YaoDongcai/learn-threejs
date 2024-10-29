@@ -16,6 +16,8 @@ import Lesson09 from '../views/HelloWorld.vue'
 import Lesson10 from '../views/lesson10.vue'
 import Lesson11 from '../views/lesson11.vue'
 import Lesson12 from '../views/lesson12.vue'
+import PlyView from '../views/plyViews.vue'
+import threePlyViews from '../views/threePlyViews.vue'
 export const routes = [
     {
         path: '/',
@@ -23,6 +25,25 @@ export const routes = [
         name: '/',
         meta: {
             title: '首页',
+            icon: 'UserFilled',
+          },
+    },
+    
+    {
+      path: '/threePlyViews',
+        name: 'threePlyViews',
+        component:threePlyViews,
+        meta: {
+            title: 'threePlyViews',
+            icon: 'UserFilled',
+          },
+    },
+    {
+      path: '/plyview',
+        name: 'plyview',
+        component:PlyView,
+        meta: {
+            title: 'plyview',
             icon: 'UserFilled',
           },
     },
