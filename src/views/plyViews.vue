@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import ModelRenderer from './ModelRenderer.vue';
+import ModelRenderer from './vtkAndThree.vue';
 
 const modelFile = ref<File | null>(null);
 const textureFile = ref<File | null>(null);

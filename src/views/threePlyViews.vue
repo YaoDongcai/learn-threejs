@@ -27,7 +27,7 @@
         camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 500);
         renderer = new THREE.WebGLRenderer({ canvas: canvas.value! });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        camera.position.z = 5;
+        camera.position.z = 100;
       };
   
       const onPlyFileChange = (event: Event) => {
@@ -39,6 +39,7 @@
             const contents = e.target?.result as ArrayBuffer;
             const loader = new PLYLoader();
             const geometry = loader.parse(contents);
+            console.log('-----geometry', geometry)
             loadTextureAndCreateMesh(geometry);
           };
           reader.readAsArrayBuffer(file);
@@ -53,6 +54,7 @@
           reader.onload = (e) => {
             const textureLoader = new THREE.TextureLoader();
             const texture = textureLoader.load(e.target?.result as string, (texture) => {
+                console.log('----texture', texture)
               if (mesh) scene.remove(mesh);
               const material = new THREE.MeshBasicMaterial({ map: texture });
               mesh = new THREE.Mesh(mesh?.geometry, material);

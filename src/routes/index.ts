@@ -18,6 +18,7 @@ import Lesson11 from '../views/lesson11.vue'
 import Lesson12 from '../views/lesson12.vue'
 import PlyView from '../views/plyViews.vue'
 import threePlyViews from '../views/threePlyViews.vue'
+import plyLoaderAndThree from '../views/plyLoaderAndThree.vue'
 export const routes = [
     {
         path: '/',
@@ -28,7 +29,16 @@ export const routes = [
             icon: 'UserFilled',
           },
     },
-    
+    {
+      
+      path: '/plyLoaderAndThree',
+        name: 'plyLoaderAndThree',
+        component:plyLoaderAndThree,
+        meta: {
+            title: 'plyLoaderAndThree',
+            icon: 'UserFilled',
+          },
+    },
     {
       path: '/threePlyViews',
         name: 'threePlyViews',

@@ -50,6 +50,7 @@ const loadTexture = async (file: File): Promise<vtkTexture> => {
       // Use the RGB canvas as texture input
       
       texture.setCanvas(rgbCanvas);
+      console.log('----texture', texture)
       resolve(texture);
     };
     
@@ -73,6 +74,7 @@ const loadModel = async (modelFile: File, textureFile: File | null) => {
   reader.parseAsArrayBuffer(content);
   
   const mapper = vtkMapper.newInstance();
+  console.log('----reader.getOutputPort()', reader.getOutputData())
   mapper.setInputConnection(reader.getOutputPort());
   mapper.setInterpolateScalarsBeforeMapping(true);
 
