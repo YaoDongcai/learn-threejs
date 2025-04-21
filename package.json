@@ -10,12 +10,13 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.1.0",
-    "@kitware/vtk.js": "^32.5.1",
+    "@kitware/vtk.js": "^32.14.0",
     "@types/fabric": "^5.3.3",
     "@types/three": "^0.154.0",
     "element-plus": "^2.3.3",
     "fabric": "^5.3.0",
     "gl-matrix": "^3.4.3",
+    "snabbdom": "^3.6.2",
     "three": "^0.154.0",
     "vue": "^3.2.45",
     "vue-router": "^4.2.4"
