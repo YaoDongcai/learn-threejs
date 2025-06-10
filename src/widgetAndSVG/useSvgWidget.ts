@@ -98,6 +98,53 @@ const createSVGLabel = (
   );
   return dashedLine;
 };
+const createCircleSVG = (
+  textProps: {
+    [key: string]: string;
+  },
+  circleStartPoints: Vector2,
+  h: any
+) => {
+  const dashedLine = {
+    key: "circle",
+    attrs: {
+      stroke: "#82ff82", // 默认的颜色
+      fill: "none",
+      cx: circleStartPoints[0],
+      cy: circleStartPoints[1],
+      r: 5
+    },
+  };
+  Object.keys(textProps || {}).forEach(
+    (prop) =>
+      // text.setAttribute(prop, textProps[prop])
+      (dashedLine.attrs[prop] = textProps[prop])
+  );
+  return h("circle", dashedLine);
+};
+const createPolyLineSVG = (
+  textProps: {
+    [key: string]: string;
+  },
+  points: Vector2,
+  h: any
+) => { 
+  const lineString = points.map((item: Vector2) => `${item[0]},${item[1]}`).join(" ");
+
+  const dashedLine = {
+    key: "polyLine",
+    attrs: {
+      stroke: "#82ff82", // 默认的颜色
+      points: lineString,
+    },
+  };
+  Object.keys(textProps || {}).forEach(
+    (prop) =>
+      // text.setAttribute(prop, textProps[prop])
+      (dashedLine.attrs[prop] = textProps[prop])
+  );
+  return h("polyline", dashedLine);
+};
 // 动态计算偏移量dx和dy的函数
 const computeDxAndDy = (coords: Array<Vector2>) => {
   const coords2d = coords[0];
@@ -202,6 +249,13 @@ export const useWidgetAndSVG = ({ widgetManager }: any) => {
       render(data: any, h: any) {
         const nodes: any[] = [];
         const labels: any[] = [];
+        // 开始创建polyline 和circle
+        data.coords.forEach((coord: Vector2, index: number) => {
+          // 创建圆形SVG
+          nodes.push(createCircleSVG({},
+            coord, h))
+        })
+        nodes.push(createPolyLineSVG({},data.coords, h))
         if (!handle.getVisibility()) return { nodes, labels };
         if (!data || data.coords.length < 2) return { nodes, labels };
         const [x1, y1] = data.coords[0];

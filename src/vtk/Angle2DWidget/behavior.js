@@ -1,6 +1,6 @@
 import _toConsumableArray from "@babel/runtime/helpers/toConsumableArray";
-import macro from "@/vtk.js/macros.js";
-import vtkPointPicker from "@/vtk.js/Rendering/Core/PointPicker.js";
+import macro from "@kitware/vtk.js/macros.js";
+import vtkPointPicker from "@kitware/vtk.js/Rendering/Core/PointPicker.js";
 import { calculateAngle } from "./utils.js";
 const MAX_POINTS = 3;
 function widgetBehavior(publicAPI, model) {
@@ -55,7 +55,7 @@ function widgetBehavior(publicAPI, model) {
       model.widgetState.getHandleList().length < MAX_POINTS &&
       manipulator
     ) {
-      const worldCoords = manipulator.handleEvent(
+      const { worldCoords } = manipulator.handleEvent(
         e,
         model._apiSpecificRenderWindow
       ); // Commit handle to location
@@ -108,7 +108,7 @@ function widgetBehavior(publicAPI, model) {
       model.activeState.getActive() &&
       !ignoreKey(callData)
     ) {
-      const worldCoords = manipulator.handleEvent(
+      const { worldCoords } = manipulator.handleEvent(
         callData,
         model._apiSpecificRenderWindow
       );

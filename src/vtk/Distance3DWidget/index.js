@@ -4,12 +4,11 @@ import vtkAbstractWidgetFactory from "@kitware/vtk.js/Widgets/Core/AbstractWidge
 import vtkPlanePointManipulator from "@kitware/vtk.js/Widgets/Manipulators/PlaneManipulator.js";
 
 import vtkSphereHandleRepresentation from "@kitware/vtk.js/Widgets/Representations/SphereHandleRepresentation.js";
-
-import { e as distance2BetweenPoints } from "@kitware/vtk.js/Common/Core/Math/index.js";
+import vtkMath from "@kitware/vtk.js/Common/Core/Math";
 import widgetBehavior from "./behavior.js";
 import generateState from "./state.js";
 import { ViewTypes } from "@kitware/vtk.js/Widgets/Core/WidgetManager/Constants.js";
-
+const distance2BetweenPoints = vtkMath.distance2BetweenPoints;
 function ownKeys(object, enumerableOnly) {
   const keys = Object.keys(object);
   if (Object.getOwnPropertySymbols) {

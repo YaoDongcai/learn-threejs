@@ -1,10 +1,10 @@
-import {
-  s as subtract,
-  x as multiplyScalar,
-  k as add,
-  C as areEquals,
-} from "@/vtk.js/Common/Core/Math/index.js";
-
+import vtkMath from "@kitware/vtk.js/Common/Core/Math/index.js";
+const {
+  subtract,
+  multiplyScalar,
+  add,
+  areEquals,
+} = vtkMath;
 function calculateTextPosition(model) {
   const vector = [0, 0, 0];
   const handleLists = model.widgetState.getHandleList();

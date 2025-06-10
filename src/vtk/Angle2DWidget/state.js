@@ -1,4 +1,4 @@
-import vtkStateBuilder from "@/vtk.js/Widgets/Core/StateBuilder.js";
+import vtkStateBuilder from "@kitware/vtk.js/Widgets/Core/StateBuilder.js";
 
 function generateState() {
   return vtkStateBuilder

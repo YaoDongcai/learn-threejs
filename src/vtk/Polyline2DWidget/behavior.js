@@ -45,7 +45,7 @@ function widgetBehavior(publicAPI, model) {
       return macro.VOID;
     }
 
-    const worldCoords = manipulator.handleEvent(
+    const { worldCoords } = manipulator.handleEvent(
       callData,
       model._apiSpecificRenderWindow
     );
