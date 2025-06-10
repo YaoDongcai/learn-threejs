@@ -1,5 +1,5 @@
 <template>
-  <div ref="rootContainer" style="width: 100%; height: 100%"></div>
+  <div ref="containerRef" style="width: 100%; height: 100%"></div>
   <div style="position: absolute; right: 20px; top: 20px">
     <button @click="addWidget">添加widget</button>
     <br />
@@ -20,96 +20,71 @@ import { ref, onMounted, reactive } from "vue";
 import "@kitware/vtk.js/Rendering/Profiles/Geometry";
 import "@kitware/vtk.js/Rendering/Profiles/Glyph";
 
-import "@kitware/vtk.js/IO/Core/DataAccessHelper/HtmlDataAccessHelper";
-import "@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper";
-import "@kitware/vtk.js/IO/Core/DataAccessHelper/JSZipDataAccessHelper";
-import vtkInteractorStyleImage from "@kitware/vtk.js/Interaction/Style/InteractorStyleImage";
-import vtkImageMapper from "@kitware/vtk.js/Rendering/Core/ImageMapper";
-import vtkImageSlice from "@kitware/vtk.js/Rendering/Core/ImageSlice";
-import vtkImageReslice from "@kitware/vtk.js/Imaging/Core/ImageReslice";
 import vtkActor from "@kitware/vtk.js/Rendering/Core/Actor";
 import vtkConeSource from "@kitware/vtk.js/Filters/Sources/ConeSource";
-import vtkHttpDataSetReader from "@kitware/vtk.js/IO/Core/HttpDataSetReader";
-import vtkGenericRenderWindow from "@kitware/vtk.js/Rendering/Misc/GenericRenderWindow";
 import vtkFullScreenRenderWindow from "@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow";
 import vtkMapper from "@kitware/vtk.js/Rendering/Core/Mapper";
 import vtkPolyLineWidget from "@kitware/vtk.js/Widgets/Widgets3D/PolyLineWidget";
 import vtkLineWidget from "@kitware/vtk.js/Widgets/Widgets3D/LineWidget";
+import vtkDistanceWidget from "@/vtk/Distance3DWidget/index";
 import vtkWidgetManager from "@kitware/vtk.js/Widgets/Core/WidgetManager";
 import { useWidgetAndSVG } from "@/widgetAndSVG/useSvgWidget";
 
-const rootContainer = ref<HTMLDivElement | null>(null);
+const containerRef = ref(null);
 
-// let renderer: any = null;
-// let renderWindow: any = null;
-
-const widgetManager = vtkWidgetManager.newInstance();
-const fullScreenRenderWindow = vtkGenericRenderWindow.newInstance({
-  background: [0, 0, 0],
-});
-const renderWindow = fullScreenRenderWindow.getRenderWindow();
-const renderer = fullScreenRenderWindow.getRenderer();
+let renderer: any = null;
+let renderWindow: any = null;
+let widgetManager: any = null;
 onMounted(() => {
-    if (!rootContainer.value) return;
-  // Create a generic render window
+  const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+    container: containerRef.value,
+  });
+  renderer = fullScreenRenderer.getRenderer();
+  renderWindow = fullScreenRenderer.getRenderWindow();
 
-  fullScreenRenderWindow.setContainer(rootContainer.value);
+  const cone = vtkConeSource.newInstance();
+  const mapper = vtkMapper.newInstance();
+  const actor = vtkActor.newInstance();
 
-  const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
-  reader
-    .setUrl("https://kitware.github.io/vtk-js/data/volume/headsq.vti", {
-      loadData: true,
-    })
-    .then(() => {
-      // Read binary data
+  actor.setMapper(mapper);
+  mapper.setInputConnection(cone.getOutputPort());
+  actor.getProperty().setOpacity(0.5);
 
-      const data = reader.getOutputData();
-      const reslice = vtkImageReslice.newInstance();
-      reslice.setInputData(data);
-      const dataRange = data.getPointData().getScalars().getRange();
-      const extent = data.getExtent();
-      // Create image mapper and image slice
-      const imageMapper = vtkImageMapper.newInstance();
-      imageMapper.setInputConnection(reslice.getOutputPort());
-      imageMapper?.setRelativeCoincidentTopologyLineOffsetParameters(0, 66000);
-      imageMapper?.setRelativeCoincidentTopologyPointOffsetParameters(0, 66000);
-      imageMapper?.setRelativeCoincidentTopologyPolygonOffsetParameters(
-        0,
-        66000
-      );
-      //   imageMapper.setKSlice(30);
-      imageMapper.setSliceAtFocalPoint(true);
-      const imageActor = vtkImageSlice.newInstance();
-      imageActor.setMapper(imageMapper);
-      imageActor.getProperty().setColorLevel((dataRange[0] + dataRange[1]) / 2);
-      imageActor.getProperty().setColorWindow(dataRange[1]);
+  renderer.addActor(actor);
+  renderer.resetCamera();
+  renderWindow.render();
 
-      widgetManager.setRenderer(renderer);
-      // Add image slice to the renderer
-      renderer.addActor(imageActor);
-      const bounds = imageActor.getBounds();
-      const camera = renderer.getActiveCamera();
-      renderer.resetCamera(bounds);
-      renderer.resetCameraClippingRange();
-      camera.setViewUp(0, 1, 0);
-      camera.setParallelProjection(true);
-
-      const iStyle: vtkInteractorStyleImage =
-        vtkInteractorStyleImage.newInstance();
-      iStyle.setInteractionMode("IMAGE_SLICING");
-      renderWindow.getInteractor().setInteractorStyle(iStyle);
-      const renderInteractor = renderWindow.getInteractor();
-      renderInteractor.render();
-      renderWindow.render();
+  widgetManager = vtkWidgetManager.newInstance();
+  widgetManager.setRenderer(renderer);
 });
-})
+
 const { setWidgetSVG, removeWidgetAndSVG, showOrHideWidgetAndSVG } =
   useWidgetAndSVG({ widgetManager });
 
 const dataList = reactive<any[]>([]);
+
 const addWidget = () => {
-  const widget = vtkLineWidget.newInstance();
+  // const widget = vtkLineWidget.newInstance();
+  const widget = vtkDistanceWidget.newInstance();
+  widget.setHandleVisibility(false)
+  console.log("widget", widget);
   const currentHandle = widgetManager.addWidget(widget);
+  currentHandle.setScaleInPixels(true)
+  currentHandle.setUseActiveColor(false)
+  currentHandle.setHandleVisibility(false)
+  // 设置 handle 颜色为透明
+  // const handle1 = currentHandle.getWidgetState().getHandle1();
+  // const handle2 = currentHandle.getWidgetState().getHandle2();
+  // if (handle1 && handle2) {
+  //   console.log("handle1", handle1);
+  //   handle1.setColor([0, 0, 0]);
+  //   handle2.setColor([0, 0, 0]);
+  //   handle1.setVisibility?.(false); // 如果有 setOpacity 方法
+  //   handle2.setVisibility?.(false);
+  // }
+  console.log("currentHandle", currentHandle);
+  // currentHandle.setTextStateIndex(0);
+  currentHandle.setVisibility(true);
   widgetManager.enablePicking();
   widgetManager.grabFocus(widget);
   const widgetId = new Date().getTime();

@@ -19,10 +19,9 @@ const patch = init([
 
 function mountDummySVGContainer(canvas) {
   const container = canvas.parentElement
-
+  // const parentContainer = container.parentElement
   const dummy = document.createElement('div')
   container.insertBefore(dummy, canvas.nextSibling)
-
   const containerStyles = window.getComputedStyle(container)
   if (containerStyles.position === 'static') {
     container.style.position = 'relative'

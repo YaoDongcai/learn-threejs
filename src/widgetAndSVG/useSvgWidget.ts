@@ -1,183 +1,400 @@
 import vtkInteractorObserver from "@kitware/vtk.js/Rendering/Core/InteractorObserver";
-import { bindSVGRepresentation, makeListenableSVGNode } from './SnabbdomHelpers.js'
+import {
+  bindSVGRepresentation,
+  makeListenableSVGNode,
+} from "./SnabbdomHelpers.js";
+import vtkMath from "@kitware/vtk.js/Common/Core/Math";
+import {
+  calculateAngle,
+  getRadius,
+  calculateRotate,
+  getTextPoint,
+} from "./angle";
+import type { Vector2, Vector3 } from "@kitware/vtk.js/types.js";
 
-const { computeWorldToDisplay } = vtkInteractorObserver
+const { computeWorldToDisplay, computeDisplayToWorld } = vtkInteractorObserver;
 
-const spanTextStyle = {
-  position: 'absolute',
-  fontSize: '14px',
-  cursor: 'move',
-  backgroundColor: 'white',
-  padding: '2px 5px',
-  border: '1px solid black',
-  borderRadius: '4px',
-  pointerEvents: 'auto',
+/**
+ * 计算二维线段的中点及其垂线端点
+ * @param {Number[]} a - 起点坐标 [x1, y1]
+ * @param {Number[]} b - 终点坐标 [x2, y2]
+ * @param {Number} d - 垂线长度
+ * @returns {Object} 包含中点和垂线端点的对象
+ */
+function calculatePerpendicularLine(a: Vector2, b: Vector2, d: number) {
+  // 转换为三维向量处理
+  const a3d: Vector3 = [a[0], a[1], 0];
+  const b3d: Vector3 = [b[0], b[1], 0];
+
+  // 1. 计算中点
+  const midPoint: Vector3 = [0, 0, 0];
+  vtkMath.add(a3d, b3d, midPoint);
+  vtkMath.multiplyScalar(midPoint, 0.5);
+
+  // 2. 计算方向向量
+  const direction: Vector3 = [0, 0, 0];
+  vtkMath.subtract(b3d, a3d, direction);
+
+  // 3. 计算垂直方向向量（逆时针90度旋转）
+  const orthogonal: Vector3 = [-direction[1], direction[0], 0];
+
+  // 4. 归一化并计算偏移量
+  const normalized: Vector3 = [...orthogonal];
+  const length = vtkMath.norm(normalized);
+
+  if (length === 0) {
+    return {
+      midpoint: midPoint.slice(0, 2),
+      points: null, // 重合点无法计算垂线
+    };
+  }
+
+  vtkMath.normalize(normalized);
+  const offset = vtkMath.multiplyScalar(normalized, d / 2, []);
+
+  // 5. 计算垂线端点
+  const p1 = vtkMath.add(midPoint, offset, []);
+  const p2 = vtkMath.subtract(midPoint, offset, []);
+
+  return {
+    midpoint: midPoint.slice(0, 2),
+    points: [p1.slice(0, 2), p2.slice(0, 2)],
+  };
 }
+const spanTextStyle = {
+  position: "absolute",
+  fontSize: "14px",
+  cursor: "pointer",
+  color: "#00ff00",
+  zIndex: 1,
+  // backgroundColor: "white",
+  // padding: "2px 5px",
+  // border: "1px solid black",
+  // borderRadius: "4px",
+  pointerEvents: "auto",
+};
+// 创建文本标签的函数
+const createSVGLabel = (
+  textProps: {
+    [key: string]: string;
+  },
+  polyLineStart: Vector2,
+  endPoints: Vector2
+) => {
+  const dashedLine = {
+    key: "dashedLine",
+    attrs: {
+      stroke: "#82ff82", // 默认的颜色
+      fill: "none",
+      "stroke-dasharray": "2 2",
+      points: `${polyLineStart[0]},${polyLineStart[1]} ${endPoints[0] + 10},${endPoints[1] + 10
+        }`,
+    },
+  };
+  Object.keys(textProps || {}).forEach(
+    (prop) =>
+      // text.setAttribute(prop, textProps[prop])
+      (dashedLine.attrs[prop] = textProps[prop])
+  );
+  return dashedLine;
+};
+// 动态计算偏移量dx和dy的函数
+const computeDxAndDy = (coords: Array<Vector2>) => {
+  const coords2d = coords[0];
+  if (coords2d) {
+    if (Number.isNaN(coords2d[0])) {
+      coords2d[0] = 0;
+    }
+    let dx = 0;
+    let dy = 1;
+    if (coords.length === 1) {
+      dx = 1; // put text in top-right
+    }
+    if (coords.length === 2) {
+      // line widget
+      const c1 = coords[1];
+      if (c1[1] - coords2d[1] > 0) {
+        dy = -1;
+      }
+    } else if (coords.length === 3) {
+      // angle widget
+      const c1 = coords[1];
+      const c2 = coords[2];
+      const v1 = normalize2([c1[0] - coords2d[0], c1[1] - coords2d[1]]);
+      const v2 = normalize2([c2[0] - coords2d[0], c2[1] - coords2d[1]]);
 
+      // negative bisector, defaulting to 1 if sign is 0
+      dx = Math.sign(-(v1[0] + v2[0])) || 1;
+      dy = Math.sign(-(v1[1] + v2[1])) || 1;
+    }
+    // canvas->svg inverts the Y coordinate
+    dy *= -1;
+    if (coords.length === 3) {
+      text.setAttribute("x", (coords[0][0] + coords[1][0]) / 2);
+      text.setAttribute("y", (coords[0][1] + coords[2][1]) / 2);
+      text.setAttribute("dx", 0);
+      text.setAttribute("dy", 0);
+    } else {
+      text.setAttribute("x", coords[0][0]);
+      text.setAttribute("y", coords[0][1]);
+      text.setAttribute("dx", dx);
+      text.setAttribute("dy", dy);
+    }
+    const alignment = dy === 1 ? "hanging" : "baseline";
+    const anchor = dx === 1 ? "start" : "end";
+    text.setAttribute("alignment-baseline", alignment);
+    text.setAttribute("text-anchor", anchor);
+
+    // text.textContent = model.text;
+  }
+};
 export const useWidgetAndSVG = ({ widgetManager }: any) => {
   // 初始化 Snabbdom
   let isDragging = false;
+  const millimeter = "mm";
+  const degree = "°";
+  const squareMillimeter = "mm²";
+  let polyLineStart: Vector2 = [0, 0]
+  let endPoints: Vector2 = [0, 0]
   const setWidgetSVG = (opts: any) => {
-    const { widget, renderer, handle } = opts
-    const data =  {
-      widgetType: '',// widget类型
-      widgetId: '', // widget唯一标识
+    const { widget, renderer, handle } = opts;
+    const data = {
+      size: [],
+      widgetType: "", // widget类型
+      widgetId: "", // widget唯一标识
       textOffsetX: 0, // 偏移量X
       textOffsetY: 0, // 偏移量Y
-      text: '龋病', // 文本内容
+      text: "", // 文本内容
       handleList: [], // 处理器列表
       coords: [], // 坐标列表
-    }
+      origin: [], // 三维坐标点
+      displayWorld2: 0, // 默认的世界坐标系
+    };
     return bindSVGRepresentation(renderer, widget.getWidgetState(), {
       mapState(widgetState: any, { size }: any) {
-        data.coords = []
-        data.handleList = []
+        data.coords = [];
+        data.handleList = [];
         data.textOffsetX = data.textOffsetX || 0;
         data.textOffsetY = data.textOffsetY || 0;
-        if (!handle.getVisibility()) return data
-        // console.log('---widgetState', widgetState)
-        const handleList = [widgetState.getHandle1(), widgetState.getHandle2()]
+        data.size = size;
+        if (!handle.getVisibility()) return data;
+        // console.log("---widgetState", widgetState);
+        const handleList = widgetState.getHandleList(); // [widgetState.getHandle1(), widgetState.getHandle2()];
+        // 获取的是2D的坐标点位
         handleList.forEach((item: any) => {
-          const origin = item.getOrigin()
+          const origin = item.getOrigin();
           if (origin) {
-            const coords = computeWorldToDisplay(renderer, ...origin)
-            data.coords.push([coords[0], size[1] - coords[1]])
+            const coords = computeWorldToDisplay(renderer, ...origin);
+            data.displayWorld2 = origin[2]; // 获取世界坐标系
+            data.coords.push([coords[0], size[1] - coords[1]]);
+            // console.log("######## coords ########", coords, size);
           }
-        })
+        });
 
-        const moveOrigin = widgetState.getMoveHandle().getOrigin()
+        const moveOrigin = widgetState.getMoveHandle().getOrigin();
+        // console.log(")))))))) moveOrigin ))))))))", moveOrigin);
         if (moveOrigin) {
-          const moveCoords = computeWorldToDisplay(renderer, ...moveOrigin)
-          data.coords.push([moveCoords[0], size[1] - moveCoords[1]])
+          const moveCoords = computeWorldToDisplay(renderer, ...moveOrigin);
+          data.coords.push([moveCoords[0], size[1] - moveCoords[1]]);
         }
-        return data
+        return data;
       },
       render(data: any, h: any) {
-        const nodes: any[] = []
-        const labels: any[] = []
-        if (!data || data.coords.length < 2) return { nodes, labels }
+        const nodes: any[] = [];
+        const labels: any[] = [];
+        if (!handle.getVisibility()) return { nodes, labels };
+        if (!data || data.coords.length < 2) return { nodes, labels };
+        const [x1, y1] = data.coords[0];
+        const [x2, y2] = data.coords[1];
 
-        data.coords.forEach((item: number[], idx: number) => {
-          if (idx === data.coords.length - 1) return
-          const [x1, y1] = data.coords[idx]
-          const [x2, y2] = data.coords[idx + 1]
-          const line = {
-            key: 'polyline',
-            attrs: { stroke: 'green', fill: 'none', x1, y1, x2, y2 },
-          }
-          const lineH = h('line', line)
-          nodes.push(lineH)
-        })
+        // let endPoints: Vector2 = [x2, y2];
+        if (
+          widget.getClassName() === "vtkDistanceWidget" ||
+          widget.getClassName() === "vtkPolyLineWidget"
+        ) {
+          // 统一封装了测量类的获取距离的数据
+          data.text = widget?.getMeasure().toFixed(2) + millimeter;
+          polyLineStart = [(x1 + x2) / 2, (y1 + y2) / 2];
+          endPoints = [polyLineStart[0] + 20, polyLineStart[1] - 40];
 
-        const [x1, y1] = data.coords[0]
-        const [x2, y2] = data.coords[1]
-        const polyLineStart = [(x1 + x2) / 2, (y1 + y2) / 2]
-        const dashedLine = {
-          key: 'dashedLine',
-          attrs: {
-            stroke: 'red',
-            fill: 'none',
-            'stroke-dasharray': '2 2',
-            x1: polyLineStart[0],
-            y1: polyLineStart[1],
-            x2: x1,
-            y2: y1 + 40,
-          },
         }
-        const dashedlineH = h('line', dashedLine)
-        nodes.push(dashedlineH)
+        if (widget.getClassName() === "vtkSplineWidget") {
+          data.text = widget?.getMeasure().toFixed(2) + squareMillimeter;
+          polyLineStart = [(x1 + x2) / 2, (y1 + y2) / 2];
+          endPoints = [polyLineStart[0] + 20, polyLineStart[1] - 40];
+        }
+        if (
+          widget.getClassName() === "vtkBirectionalWidget" ||
+          widget.getClassName() === "vtkCurveWidget"
+        ) {
+          data.text = widget?.getMeasure() + millimeter;
+          polyLineStart = [(x1 + x2) / 2, (y1 + y2) / 2];
+          endPoints = [polyLineStart[0] + 20, polyLineStart[1] - 40];
+        }
+        if (widget.getClassName() === "vtkAngleWidget") {
+          // 说明是当前的角度测量
+          if (data.coords.length === 3) {
+            const coords1th = [...data.coords[0], 0];
+            const coords2th = [...data.coords[1], 0];
+            const coords3th = [...data.coords[2], 0];
+            // 判断当前的坐标是否为三个点
+            const angle = calculateAngle(
+              coords1th as Vector3,
+              coords2th as Vector3,
+              coords3th as Vector3
+            );
+            // console.log("---angle", angle);
+            const radius = getRadius(
+              coords1th as Vector3,
+              coords2th as Vector3,
+              coords3th as Vector3
+            );
+            // console.log("---radius", radius);
+            const rotate = calculateRotate(coords1th, coords2th, coords3th);
+            // console.log("----rotate", rotate);
+            const textPoint = getTextPoint(
+              radius,
+              rotate.angle,
+              angle,
+              coords2th
+            );
+            data.text = widget?.getMeasure() + degree;
+            // console.log("----textPoint", textPoint);
+            endPoints = [textPoint.x, textPoint.y];
+            polyLineStart = [textPoint.x, textPoint.y];
+          }
+          if (data.coords.length < 3) {
+            return { nodes, labels }
+          }
+        }
+
+        if (!endPoints) return { nodes, labels };
+        if (widget.get()?.labelOrigin) {
+          // 表示有了新的设置坐标
+          const labelOrigin = widget.get()?.labelOrigin;
+          const displayCoord = computeWorldToDisplay(renderer, ...labelOrigin);
+          endPoints = [displayCoord[0], data.size[1] - displayCoord[1]];
+        }
+        data.textOffsetX = endPoints[0]; // 更新偏移量
+        data.textOffsetY = endPoints[1]; // 更新偏移量
+        const dashedLine = createSVGLabel({}, polyLineStart, endPoints);
+        const dashedlineH = h("polyline", dashedLine);
+        nodes.push(dashedlineH);
         const spanText = h(
-          'span',
+          "span",
           {
             style: {
               ...spanTextStyle,
-              left: `${x2 + (data.textOffsetX || 0)}px`, // 添加偏移量
-              top: `${y2 + (data.textOffsetY || 0)}px`,  // 添加偏移量
-              cursor: 'move',  // 修改为移动光标
+              left: `${endPoints[0] / window.devicePixelRatio}px`,
+              top: `${endPoints[1] / window.devicePixelRatio}px`,
+              cursor: "pointer",
+              pointerEvents:
+                handle?.widgetCompleted && !handle?.widgetCompleted?.()
+                  ? "none"
+                  : "auto",
             },
             on: {
-              mousedown: (event:MouseEvent) => {
-                event.stopPropagation(); // 阻止事件冒泡
-                // 暂时禁用VTK交互器
-                const interactor = renderer.getRenderWindow().getInteractor();
-                const wasActive = interactor.getEnabled();
-                interactor.setEnabled(false);
+              mousedown: (event: MouseEvent) => {
                 isDragging = true;
-                // 初始化拖拽状态
                 const startX = event.clientX;
                 const startY = event.clientY;
                 const initialOffsetX = data.textOffsetX || 0;
                 const initialOffsetY = data.textOffsetY || 0;
-                
-                // 拖拽过程处理
-                const handleMouseMove = (event: MouseEvent) => {  
-                  event.stopPropagation(); // 阻止事件冒泡
+
+                const handleMouseMove = (event: MouseEvent) => {
+                  event.stopPropagation();
+                  event.preventDefault();
+
                   if (isDragging) {
                     const dx = event.clientX - startX;
                     const dy = event.clientY - startY;
-                    data.textOffsetX = initialOffsetX + dx; // 更新偏移量
-                    data.textOffsetY = initialOffsetY + dy; // 更新偏移量
-                    const widgetState = widget.getWidgetState()
-                    widgetState.modified()
+                    data.textOffsetX = initialOffsetX + dx;
+                    data.textOffsetY = initialOffsetY + dy;
+
+                    // 边界检查
+                    if (data.textOffsetX <= 0) data.textOffsetX = 0;
+                    if (data.textOffsetY <= 0) data.textOffsetY = 0;
+                    if (data.textOffsetX >= data.size[0] - 30)
+                      data.textOffsetX = data.size[0] - 30;
+                    if (data.textOffsetY >= data.size[1] - 30)
+                      data.textOffsetY = data.size[1] - 30;
+
+                    // 更新标签位置
+                    const origin = computeDisplayToWorld(
+                      renderer,
+                      data.textOffsetX,
+                      data.size[1] - data.textOffsetY,
+                      data.displayWorld2
+                    );
+
+                    widget.set(
+                      {
+                        labelOrigin: origin,
+                      },
+                      true
+                    );
+
+                    const widgetState = widget.getWidgetState();
+                    widgetState.modified();
                   }
-                }
-                // 结束拖拽
-                const handleMouseUp = () => {
-                  if (wasActive) interactor.setEnabled(true);
-                  isDragging = false;
-                  document.removeEventListener('mousemove', handleMouseMove);
-                  document.removeEventListener('mouseup', handleMouseUp);
                 };
-        
-                // 绑定事件监听
-                document.addEventListener('mousemove', handleMouseMove);
-                document.addEventListener('mouseup', handleMouseUp);
-              }
+
+                const handleMouseUp = () => {
+                  isDragging = false;
+
+                  document.removeEventListener("mousemove", handleMouseMove);
+                  document.removeEventListener("mouseup", handleMouseUp);
+                };
+
+                document.addEventListener("mousemove", handleMouseMove);
+                document.addEventListener("mouseup", handleMouseUp);
+              },
             },
           },
-          '龋病',
-        )
-        labels.push(spanText)
-        return { nodes, labels }
+          data.text
+        );
+        labels.push(spanText);
+        return { nodes, labels };
       },
-    })
-  }
+    });
+  };
 
   // 删除widget
   const removeWidgetAndSVG = (obj: any) => {
-    const { widgetId } = obj
+    const { widgetId } = obj;
     widgetManager = widgetManager || obj.widgetManager;
-    const widgetList = widgetManager.getWidgets()
+    const widgetList = widgetManager.getWidgets();
     widgetList.forEach((widget: any) => {
-      const id = widget.get()?.widgetId
+      const id = widget.get()?.widgetId;
       if (id && +id === widgetId) {
         // 清除svg
-        widget.get()?.cleanSVG()
+        widget?.get()?.cleanSVG?.();
         // 移除widget
-        widgetManager.removeWidget(widget)
+        widgetManager.removeWidget(widget);
       }
-    })
-  }
+    });
+  };
 
-// 显示隐藏widget
+  // 显示隐藏widget
   const showOrHideWidgetAndSVG = (obj: any) => {
     const { widgetId, isShow } = obj;
     widgetManager = widgetManager || obj.widgetManager;
-    const widgetList = widgetManager.getWidgets()
+    const widgetList = widgetManager.getWidgets();
     widgetList.forEach((widget: any) => {
-      const id = widget.get()?.widgetId
+      const id = widget.get()?.widgetId;
       if (id && +id === widgetId) {
-        let visibility = isShow === undefined ? widget.getVisibility() : isShow
-        widget.setVisibility(!visibility)
+        const visibility =
+          isShow === undefined ? widget.getVisibility() : isShow;
+        widget.setVisibility(!visibility);
         // 触发widgetstate 的更新，保证svg 更新
-        widget.getWidgetState().modified()
+        widget.getWidgetState().modified();
         widget.getInteractor().render();
       }
-    })
-  }
+    });
+  };
   return {
     setWidgetSVG,
     removeWidgetAndSVG,
-    showOrHideWidgetAndSVG
-  }
-}
+    showOrHideWidgetAndSVG,
+  };
+};
