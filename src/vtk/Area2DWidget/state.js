@@ -1,6 +1,6 @@
-import vtkStateBuilder from "@/vtk.js/Widgets/Core/StateBuilder.js";
-import { splineKind } from "@/vtk.js/Common/DataModel/Spline3D/Constants.js";
-import { BoundaryCondition } from "@/vtk.js/Common/DataModel/Spline1D/Constants.js";
+import vtkStateBuilder from "@kitware/vtk.js/Widgets/Core/StateBuilder.js";
+import { splineKind } from "@kitware/vtk.js/Common/DataModel/Spline3D/Constants.js";
+import { BoundaryCondition } from "@kitware/vtk.js/Common/DataModel/Spline1D/Constants.js";
 
 function generateState() {
   return vtkStateBuilder

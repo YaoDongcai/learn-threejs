@@ -1,85 +1,34 @@
+import _toConsumableArray from "@babel/runtime/helpers/toConsumableArray";
 import macro from "@kitware/vtk.js/macros.js";
-import {
-  subtract,
-  add,
-  normalize,
-} from "@kitware/vtk.js/Common/Core/Math";
+
+const MAX_POINTS = 300;
+function uuid() {
+  const s = [];
+  const hexDigits = "0123456789abcdef";
+  for (let i = 0; i < 32; i++) {
+    s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+  }
+  s[14] = "4"; // bits 12-15 of the time_hi_and_version field to 0010
+  s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1); // bits 6-7 of the clock_seq_hi_and_reserved to 01
+  s[8] = s[13] = s[18] = s[23];
+  const uuid = s.join("");
+  return uuid;
+}
 function widgetBehavior(publicAPI, model) {
-  model.classHierarchy.push("vtkPolyLineWidgetProp");
+  model.classHierarchy.push("vtkCurveWidgetProp");
+  model.widgetId = uuid();
   model._isDragging = false; // --------------------------------------------------------------------------
   // Display 2D
   // --------------------------------------------------------------------------
-  publicAPI.getOffsetDistance = function () {
-    return model.offsetDistance || 10;
-  };
-  publicAPI.setOffsetDistance = function (value) {
-    model.offsetDistance = value;
+  // 给每个distancewidget 都生成一个唯一标识的id
+  publicAPI.getDistanceWidgetId = function () {
+    return model.widgetId;
   };
   publicAPI.setDisplayCallback = function (callback) {
     return model.representations[0].setDisplayCallback(callback);
   }; // --------------------------------------------------------------------------
   // Interactor events
   // --------------------------------------------------------------------------
-
-  function ignoreKey(e) {
-    return e.altKey || e.controlKey || e.shiftKey;
-  }
-
-  function updateMoveHandle(callData) {
-    let _model$activeState$ge, _model$activeState, _model$activeState$ge2;
-
-    const manipulator =
-      (_model$activeState$ge =
-        (_model$activeState = model.activeState) === null ||
-        _model$activeState === void 0
-          ? void 0
-          : (_model$activeState$ge2 = _model$activeState.getManipulator) ===
-              null || _model$activeState$ge2 === void 0
-          ? void 0
-          : _model$activeState$ge2.call(_model$activeState)) !== null &&
-      _model$activeState$ge !== void 0
-        ? _model$activeState$ge
-        : model.manipulator;
-
-    if (!manipulator) {
-      return macro.VOID;
-    }
-
-    const { worldCoords } = manipulator.handleEvent(
-      callData,
-      model._apiSpecificRenderWindow
-    );
-    const translation = model.previousPosition
-      ? subtract(worldCoords, model.previousPosition, [])
-      : [0, 0, 0];
-    model.previousPosition = worldCoords;
-    if (
-      worldCoords.length &&
-      (model.activeState === model.widgetState.getMoveHandle() ||
-        (model._isDragging && model.activeState))
-    ) {
-      // model.activeState.setOrigin(worldCoords);
-      if (model.activeState && model.activeState?.hasOwnProperty("setOrigin")) {
-        // e.g. the line is pickable but not draggable
-        model.activeState.setOrigin(worldCoords);
-      } else {
-        //dragger the line
-        const handleList = model.widgetState.getHandleList();
-        for (let i = 0; i < handleList.length; ++i) {
-          handleList[i].setOrigin(
-            add(handleList[i].getOrigin(), translation, [])
-          );
-        }
-      }
-      publicAPI.invokeInteractionEvent();
-      return macro.EVENT_ABORT;
-    }
-
-    return macro.VOID;
-  } // --------------------------------------------------------------------------
-  // Right click: Delete handle
-  // --------------------------------------------------------------------------
-
   publicAPI.handleRightButtonPress = function (e) {
     if (
       !model.activeState ||
@@ -89,6 +38,7 @@ function widgetBehavior(publicAPI, model) {
     ) {
       return macro.VOID;
     }
+
     // 当鼠标右键取消的时候 增加一个点
     if (model.hasFocus) {
       const handle = model.widgetState.addHandle();
@@ -108,6 +58,7 @@ function widgetBehavior(publicAPI, model) {
 
     if (model.activeState !== model.widgetState.getMoveHandle()) {
       model._interactor.requestAnimation(publicAPI);
+
       model.activeState.deactivate();
       model.widgetState.removeHandle(model.activeState);
       model.activeState = null;
@@ -120,12 +71,14 @@ function widgetBehavior(publicAPI, model) {
     // publicAPI.invokeEndInteractionEvent();
     return macro.EVENT_ABORT;
   };
-  // --------------------------------------------------------------------------
+  function ignoreKey(e) {
+    return e.altKey || e.controlKey || e.shiftKey;
+  } // --------------------------------------------------------------------------
   // Left press: Select handle to drag
   // --------------------------------------------------------------------------
 
   publicAPI.handleLeftButtonPress = function (e) {
-    let _model$activeState$ge3, _model$activeState2, _model$activeState2$g;
+    let _model$activeState$ge, _model$activeState, _model$activeState$ge2;
 
     if (
       !model.activeState ||
@@ -137,26 +90,35 @@ function widgetBehavior(publicAPI, model) {
     }
 
     const manipulator =
-      (_model$activeState$ge3 =
-        (_model$activeState2 = model.activeState) === null ||
-        _model$activeState2 === void 0
+      (_model$activeState$ge =
+        (_model$activeState = model.activeState) === null ||
+        _model$activeState === void 0
           ? void 0
-          : (_model$activeState2$g = _model$activeState2.getManipulator) ===
-              null || _model$activeState2$g === void 0
+          : (_model$activeState$ge2 = _model$activeState.getManipulator) ===
+              null || _model$activeState$ge2 === void 0
           ? void 0
-          : _model$activeState2$g.call(_model$activeState2)) !== null &&
-      _model$activeState$ge3 !== void 0
-        ? _model$activeState$ge3
+          : _model$activeState$ge2.call(_model$activeState)) !== null &&
+      _model$activeState$ge !== void 0
+        ? _model$activeState$ge
         : model.manipulator;
 
     if (
       model.activeState === model.widgetState.getMoveHandle() &&
+      model.widgetState.getHandleList().length < MAX_POINTS &&
       manipulator
     ) {
-      updateMoveHandle(e);
+      const { worldCoords } = manipulator.handleEvent(
+        e,
+        model._apiSpecificRenderWindow
+      ); // Commit handle to location
+
       const moveHandle = model.widgetState.getMoveHandle();
+      moveHandle.setOrigin.apply(moveHandle, _toConsumableArray(worldCoords));
       const newHandle = model.widgetState.addHandle();
-      newHandle.setOrigin(moveHandle.getOrigin());
+      newHandle.setOrigin.apply(
+        newHandle,
+        _toConsumableArray(moveHandle.getOrigin())
+      );
       newHandle.setColor(moveHandle.getColor());
       newHandle.setScale1(moveHandle.getScale1());
       newHandle.setManipulator(manipulator);
@@ -175,29 +137,50 @@ function widgetBehavior(publicAPI, model) {
   // --------------------------------------------------------------------------
 
   publicAPI.handleMouseMove = function (callData) {
+    let _model$activeState$ge3, _model$activeState2, _model$activeState2$g;
+    const manipulator =
+      (_model$activeState$ge3 =
+        (_model$activeState2 = model.activeState) === null ||
+        _model$activeState2 === void 0
+          ? void 0
+          : (_model$activeState2$g = _model$activeState2.getManipulator) ===
+              null || _model$activeState2$g === void 0
+          ? void 0
+          : _model$activeState2$g.call(_model$activeState2)) !== null &&
+      _model$activeState$ge3 !== void 0
+        ? _model$activeState$ge3
+        : model.manipulator;
+
     if (
+      manipulator &&
       model.pickable &&
       model.dragable &&
       model.activeState &&
       model.activeState.getActive() &&
       !ignoreKey(callData)
     ) {
-      if (updateMoveHandle(callData) == macro.EVENT_ABORT) {
+      const { worldCoords } = manipulator.handleEvent(
+        callData,
+        model._apiSpecificRenderWindow
+      );
+
+      if (
+        worldCoords.length &&
+        (model.activeState === model.widgetState.getMoveHandle() ||
+          model._isDragging) &&
+        model.activeState.setOrigin // e.g. the line is pickable but not draggable
+      ) {
+        model.activeState.setOrigin(worldCoords);
+        publicAPI.invokeInteractionEvent();
         return macro.EVENT_ABORT;
       }
-    }
-
-    if (model.hasFocus) {
-      model._widgetManager.disablePicking();
     }
 
     return macro.VOID;
   }; // --------------------------------------------------------------------------
   // Left release: Finish drag / Create new handle
   // --------------------------------------------------------------------------
-  publicAPI.updateCursor = function (type) {
-    model._apiSpecificRenderWindow.setCursor(type);
-  };
+
   publicAPI.handleLeftButtonRelease = function () {
     if (
       !model.activeState ||
@@ -207,11 +190,19 @@ function widgetBehavior(publicAPI, model) {
       return macro.VOID;
     }
 
+    if (
+      model.hasFocus &&
+      model.widgetState.getHandleList().length === MAX_POINTS
+    ) {
+      publicAPI.loseFocus();
+      return macro.VOID;
+    }
+
     if (model._isDragging) {
       model._apiSpecificRenderWindow.setCursor("pointer");
 
       model.widgetState.deactivate();
-      model.activeState = null;
+
       model._interactor.cancelAnimation(publicAPI);
 
       model._isDragging = false;
@@ -233,21 +224,14 @@ function widgetBehavior(publicAPI, model) {
     // publicAPI.invokeEndInteractionEvent();
     return macro.EVENT_ABORT;
   }; // --------------------------------------------------------------------------
-  // Escape key: Release focus to switch to drag mode
-  // --------------------------------------------------------------------------
-
-  publicAPI.handleKeyDown = function (_ref) {
-    const key = _ref.key;
-
-    if (key === "Escape") {
-      publicAPI.loseFocus();
-    }
-  }; // --------------------------------------------------------------------------
   // Focus API - modeHandle follow mouse when widget has focus
   // --------------------------------------------------------------------------
 
   publicAPI.grabFocus = function () {
-    if (!model.hasFocus) {
+    if (
+      !model.hasFocus &&
+      model.widgetState.getHandleList().length < MAX_POINTS
+    ) {
       model.activeState = model.widgetState.getMoveHandle();
       model.activeState.activate();
       model.activeState.setVisible(true);
@@ -260,25 +244,6 @@ function widgetBehavior(publicAPI, model) {
     model.hasFocus = true;
   }; // --------------------------------------------------------------------------
 
-  // publicAPI.placeText = function () {
-  //   const dySign = getOffsetDirectionForTextPosition();
-
-  //   const textPropsCp = _objectSpread(
-  //     {},
-  //     model.representations[1].getTextProps()
-  //   );
-
-  //   textPropsCp.dy = dySign * Math.abs(textPropsCp.dy);
-  //   model.representations[1].setTextProps(textPropsCp);
-
-  //   model._interactor.render();
-  // };
-
-  publicAPI.setText = function (text) {
-    model.widgetState.getText().setText(text);
-
-    model._interactor.render();
-  };
   publicAPI.loseFocus = function () {
     if (model.hasFocus) {
       model._interactor.cancelAnimation(publicAPI);
@@ -297,7 +262,6 @@ function widgetBehavior(publicAPI, model) {
 
     model._interactor.render();
   };
-
   publicAPI.widgetCompleted = function () {
     return model.activeState !== model.widgetState.getMoveHandle();
   };

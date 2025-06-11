@@ -4,11 +4,15 @@ import vtkAbstractWidgetFactory from "@kitware/vtk.js/Widgets/Core/AbstractWidge
 import vtkPlanePointManipulator from "@kitware/vtk.js/Widgets/Manipulators/PlaneManipulator.js";
 
 import vtkSphereHandleRepresentation from "@kitware/vtk.js/Widgets/Representations/SphereHandleRepresentation.js";
-import {distance2BetweenPoints} from "@kitware/vtk.js/Common/Core/Math";
+// import vtkSVGCircleHandleRepresentation from "../SVGCircleHandleRepresentation";
+// import vtkSVGLabelRepresentation from "../SVGLabelRepresentation";
+// import vtkSVGCurveRepresentation from "../SVGCurveRepresentation";
+
+import { distance2BetweenPoints } from "@kitware/vtk.js/Common/Core/Math";
 import widgetBehavior from "./behavior.js";
 import generateState from "./state.js";
 import { ViewTypes } from "@kitware/vtk.js/Widgets/Core/WidgetManager/Constants.js";
-
+import { getCurvePoints } from "./helper.js";
 function ownKeys(object, enumerableOnly) {
   const keys = Object.keys(object);
   if (Object.getOwnPropertySymbols) {
@@ -48,8 +52,8 @@ function _objectSpread(target) {
 // Factory
 // ----------------------------------------------------------------------------
 
-function vtkDistanceWidget(publicAPI, model) {
-  model.classHierarchy.push("vtkDistanceWidget");
+function vtkCurveWidget(publicAPI, model) {
+  model.classHierarchy.push("vtkCurveWidget");
 
   const superClass = _objectSpread({}, publicAPI); // --- Widget Requirement ---------------------------------------------------
 
@@ -89,37 +93,78 @@ function vtkDistanceWidget(publicAPI, model) {
               scaleInPixels: true,
             },
           },
+          // {
+          //   builder: vtkSVGCircleHandleRepresentation,
+          //   labels: ["handles", "moveHandle"],
+          // },
+          // {
+          //   builder: vtkSVGCurveRepresentation,
+          //   labels: ["handles", "moveHandle"],
+          // },
+          // {
+          //   builder: vtkSVGLabelRepresentation,
+          //   labels: ["handles"],
+          // },
         ];
     }
   }; // --- Public methods -------------------------------------------------------
-  publicAPI.getMeasure = function (currentHandle) {
-    if (currentHandle) {
-      return Math.sqrt(
-        distance2BetweenPoints(
-          currentHandle[0].getOrigin(),
-          currentHandle[1].getOrigin()
-        )
-      );
-    }
+  publicAPI.getMeasure = function () {
     const handles = model.widgetState.getHandleList();
     const moveHandle = model.widgetState.getMoveHandle();
-    // 首次绘制时想要显示数值，要通过已绘制的那个点和移动中的那个点来算距离
-    if (moveHandle?.getOrigin()?.length && handles.length === 1) {
-      return Math.sqrt(
-        distance2BetweenPoints(handles[0].getOrigin(), moveHandle.getOrigin())
-      );
+    // 首次绘制时想要显示数值，要通过已绘制的点和移动中的那个点来算距离
+    if (
+      !!moveHandle?.getOrigin()?.[0] && // 曲线测量时，非首次绘制时，moveHandle的origin数组为[0,0,0]，因此排除这种情况
+      !!moveHandle?.getOrigin()?.[1] &&
+      handles.length >= 1
+    ) {
+      const curvePointsArr = [];
+      for (const element of handles) {
+        const xy = element.getOrigin();
+        const x1 = xy[0];
+        const y1 = xy[1];
+        curvePointsArr.push(x1, y1);
+      }
+      curvePointsArr.push(moveHandle.getOrigin()[0], moveHandle.getOrigin()[1]);
+
+      const res = getCurvePoints(curvePointsArr);
+      let distanceResult = 0;
+      for (let i = 0; i < res.length - 3; i += 2) {
+        distanceResult += Math.sqrt(
+          distance2BetweenPoints(
+            [res[i], res[i + 1], 0],
+            [res[i + 2], res[i + 3], 0]
+          )
+        );
+      }
+      return distanceResult.toFixed(2);
     }
-    if (handles.length !== 2) {
+    if (handles.length < 2) {
       return 0;
     }
 
     if (!handles[0].getOrigin() || !handles[1].getOrigin()) {
       return 0;
     }
+    const curvePointsArr = [];
+    for (const element of handles) {
+      const xy = element.getOrigin();
+      const x1 = xy[0];
+      const y1 = xy[1];
+      curvePointsArr.push(x1, y1);
+    }
 
-    return Math.sqrt(
-      distance2BetweenPoints(handles[0].getOrigin(), handles[1].getOrigin())
-    );
+    const res = getCurvePoints(curvePointsArr);
+    let distanceResult = 0;
+    for (let i = 0; i < res.length - 3; i += 2) {
+      distanceResult += Math.sqrt(
+        distance2BetweenPoints(
+          [res[i], res[i + 1], 0],
+          [res[i + 2], res[i + 3], 0]
+        )
+      );
+    }
+
+    return distanceResult.toFixed(2);
   };
 
   publicAPI.setManipulator = function (manipulator) {
@@ -166,14 +211,14 @@ function extend(publicAPI, model) {
   Object.assign(model, defaultValues(initialValues));
   vtkAbstractWidgetFactory.extend(publicAPI, model, initialValues);
   macro.setGet(publicAPI, model, ["manipulator"]);
-  vtkDistanceWidget(publicAPI, model);
+  vtkCurveWidget(publicAPI, model);
 } // ----------------------------------------------------------------------------
 
-const newInstance = macro.newInstance(extend, "vtkDistanceWidget"); // ----------------------------------------------------------------------------
+const newInstance = macro.newInstance(extend, "vtkCurveWidget"); // ----------------------------------------------------------------------------
 
-const vtkDistanceWidget$1 = {
+const vtkCurveWidget$1 = {
   newInstance: newInstance,
   extend: extend,
 };
 
-export { vtkDistanceWidget$1 as default, extend, newInstance };
+export { vtkCurveWidget$1 as default, extend, newInstance };

@@ -1,9 +1,9 @@
 import {
-  s as subtract,
-  x as multiplyScalar,
-  k as add,
-  C as areEquals,
-} from "@/vtk.js/Common/Core/Math/index.js";
+  subtract,
+  multiplyScalar,
+  add,
+  areEquals,
+} from "@kitware/vtk.js/Common/Core/Math";
 
 function calculateTextPosition(model) {
   const vector = [0, 0, 0];

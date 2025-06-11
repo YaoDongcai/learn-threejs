@@ -24,9 +24,13 @@ import vtkActor from "@kitware/vtk.js/Rendering/Core/Actor";
 import vtkConeSource from "@kitware/vtk.js/Filters/Sources/ConeSource";
 import vtkFullScreenRenderWindow from "@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow";
 import vtkMapper from "@kitware/vtk.js/Rendering/Core/Mapper";
-import vtkPolyLineWidget from "@kitware/vtk.js/Widgets/Widgets3D/PolyLineWidget";
+import vtkPolyLineWidget from "@/vtk/Polyline2DWidget";
 import vtkLineWidget from "@kitware/vtk.js/Widgets/Widgets3D/LineWidget";
 import vtkDistanceWidget from "@/vtk/Distance3DWidget/index";
+import vtkAngle2DWidget from "@/vtk/Angle2DWidget";
+import vtkArea2DWidget from "@/vtk/Area2DWidget";
+import vtkCurveWidget from "@/vtk/CurveWidget"
+import vtkBidirectionalWidget from "@/vtk/BidirectionalWidget";
 import vtkWidgetManager from "@kitware/vtk.js/Widgets/Core/WidgetManager";
 import { useWidgetAndSVG } from "@/widgetAndSVG/useSvgWidget";
 
@@ -64,13 +68,18 @@ const { setWidgetSVG, removeWidgetAndSVG, showOrHideWidgetAndSVG } =
 const dataList = reactive<any[]>([]);
 
 const addWidget = () => {
+  // const widget = vtkPolyLineWidget.newInstance();
   // const widget = vtkLineWidget.newInstance();
-  const widget = vtkDistanceWidget.newInstance();
-  widget.setHandleVisibility(false)
+  // const widget = vtkDistanceWidget.newInstance();
+  // const widget = vtkAngle2DWidget.newInstance();
+  // const widget = vtkArea2DWidget.newInstance();
+  // const widget = vtkCurveWidget.newInstance();
+  const widget = vtkBidirectionalWidget.newInstance();
+  widget.setHandleVisibility(true)
   console.log("widget", widget);
   const currentHandle = widgetManager.addWidget(widget);
   currentHandle.setScaleInPixels(true)
-  currentHandle.setUseActiveColor(false)
+  // currentHandle.setUseActiveColor(false)
   currentHandle.setHandleVisibility(false)
   // 设置 handle 颜色为透明
   // const handle1 = currentHandle.getWidgetState().getHandle1();

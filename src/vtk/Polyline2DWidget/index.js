@@ -1,16 +1,13 @@
 import _defineProperty from "@babel/runtime/helpers/defineProperty";
-import macro from "@/vtk.js/macros.js";
-import vtkAbstractWidgetFactory from "@/vtk.js/Widgets/Core/AbstractWidgetFactory.js";
-import vtkPlanePointManipulator from "@/vtk.js/Widgets/Manipulators/PlaneManipulator.js";
-import vtkSphereHandleRepresentation from "@/vtk.js/Widgets/Representations/SphereHandleRepresentation.js";
-import vtkSVGCircleHandleRepresentation from "@/components/vtk/SVGCircleHandleRepresentation";
-import vtkSVGLineRepresentation from "@/components/vtk/SVGLineRepresentation";
-import vtkSVGLabelRepresentation from "@/components/vtk/SVGLabelRepresentation";
+import macro from "@kitware/vtk.js/macros.js";
+import vtkAbstractWidgetFactory from "@kitware/vtk.js/Widgets/Core/AbstractWidgetFactory.js";
+import vtkPlanePointManipulator from "@kitware/vtk.js/Widgets/Manipulators/PlaneManipulator.js";
+import vtkSphereHandleRepresentation from "@kitware/vtk.js/Widgets/Representations/SphereHandleRepresentation.js";
 
 import widgetBehavior from "./behavior.js";
 import generateState, { DEF_ORIGIN } from "./state.js";
-import { ViewTypes } from "@/vtk.js/Widgets/Core/WidgetManager/Constants.js";
-import { f as distance2BetweenPoints } from "@/vtk.js/Common/Core/Math/index.js";
+import { ViewTypes } from "@kitware/vtk.js/Widgets/Core/WidgetManager/Constants.js";
+import { distance2BetweenPoints } from "@kitware/vtk.js/Common/Core/Math";
 
 function ownKeys(object, enumerableOnly) {
   const keys = Object.keys(object);
@@ -138,19 +135,7 @@ function vtkPolyLineWidget(publicAPI, model) {
             initialValues: {
               scaleInPixels: true,
             },
-          },
-          {
-            builder: vtkSVGCircleHandleRepresentation,
-            labels: ["handles", "moveHandle"],
-          },
-          {
-            builder: vtkSVGLineRepresentation,
-            labels: ["handles", "moveHandle"],
-          },
-          {
-            builder: vtkSVGLabelRepresentation,
-            labels: ["handles"],
-          },
+          }
         ];
     }
   };

@@ -1,10 +1,9 @@
-import vtkMath from "@kitware/vtk.js/Common/Core/Math/index.js";
-const {
+import {
   subtract,
   multiplyScalar,
   add,
   areEquals,
-} = vtkMath;
+} from "@kitware/vtk.js/Common/Core/Math";
 function calculateTextPosition(model) {
   const vector = [0, 0, 0];
   const handleLists = model.widgetState.getHandleList();

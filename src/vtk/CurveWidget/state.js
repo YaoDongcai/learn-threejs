@@ -8,9 +8,8 @@ function generateState() {
       mixins: ["origin", "color", "scale1", "visible", "manipulator"],
       name: "moveHandle",
       initialValues: {
-        // when scaleInPixels=true, the handles have 30px height
         scale1: 50,
-        origin: DEF_ORIGIN,
+        origin: [0, 0, 0],
         visible: false,
       },
     })
@@ -20,12 +19,11 @@ function generateState() {
       name: "handle",
       initialValues: {
         scale1: 50,
-        origin: DEF_ORIGIN,
+        origin: [0, 0, 0],
         visible: true,
       },
     })
     .build();
 }
 
-const DEF_ORIGIN = [0, 0, 0];
-export { generateState as default, DEF_ORIGIN };
+export { generateState as default };

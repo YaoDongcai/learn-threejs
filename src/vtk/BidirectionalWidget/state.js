@@ -1,5 +1,7 @@
 import vtkStateBuilder from "@kitware/vtk.js/Widgets/Core/StateBuilder.js";
 
+const DEF_ORIGIN = [0, 0, 0];
+
 function generateState() {
   return vtkStateBuilder
     .createBuilder()
@@ -27,5 +29,4 @@ function generateState() {
     .build();
 }
 
-const DEF_ORIGIN = [0, 0, 0];
 export { generateState as default, DEF_ORIGIN };

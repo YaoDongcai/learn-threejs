@@ -1,5 +1,5 @@
 import _toConsumableArray from "@babel/runtime/helpers/toConsumableArray";
-import macro from "@/vtk.js/macros.js";
+import macro from "@kitware/vtk.js/macros.js";
 import { vec3 } from "gl-matrix";
 
 function widgetBehavior(publicAPI, model) {
@@ -366,7 +366,7 @@ function widgetBehavior(publicAPI, model) {
     ) {
       return macro.VOID;
     }
-    const worldCoords = manipulator.handleEvent(
+    const { worldCoords } = manipulator.handleEvent(
       callData,
       model._apiSpecificRenderWindow
     );

@@ -1,16 +1,13 @@
 import _defineProperty from "@babel/runtime/helpers/defineProperty";
-import macro from "@/vtk.js/macros.js";
-import vtkAbstractWidgetFactory from "@/vtk.js/Widgets/Core/AbstractWidgetFactory.js";
-import vtkPlanePointManipulator from "@/vtk.js/Widgets/Manipulators/PlaneManipulator.js";
-import vtkSplineContextRepresentation from "@/vtk.js/Widgets/Representations/SplineContextRepresentation.js";
-import vtkSphereHandleRepresentation from "@/vtk.js/Widgets/Representations/SphereHandleRepresentation.js";
-import vtkSVGCircleHandleRepresentation from "@/components/vtk/SVGCircleHandleRepresentation";
-import vtkSVGCloseLineRepresentation from "@/components/vtk/SVGCloseLineRepresentation";
-import vtkSVGLabelRepresentation from "@/components/vtk/SVGLabelRepresentation";
+import macro from "@kitware/vtk.js/macros.js";
+import vtkAbstractWidgetFactory from "@kitware/vtk.js/Widgets/Core/AbstractWidgetFactory.js";
+import vtkPlanePointManipulator from "@kitware/vtk.js/Widgets/Manipulators/PlaneManipulator.js";
+import vtkSplineContextRepresentation from "@kitware/vtk.js/Widgets/Representations/SplineContextRepresentation.js";
+import vtkSphereHandleRepresentation from "@kitware/vtk.js/Widgets/Representations/SphereHandleRepresentation.js";
 
 import widgetBehavior from "./behavior.js";
 import generateState, { DEF_ORIGIN } from "./state.js";
-import { ViewTypes } from "@/vtk.js/Widgets/Core/WidgetManager/Constants.js";
+import { ViewTypes } from "@kitware/vtk.js/Widgets/Core/WidgetManager/Constants.js";
 import { getPoint, updateTextPosition } from "./helpers.js";
 function ownKeys(object, enumerableOnly) {
   const keys = Object.keys(object);
@@ -174,18 +171,18 @@ function vtkSplineWidget(publicAPI, model) {
             builder: vtkSplineContextRepresentation,
             labels: ["handles", "moveHandle"],
           },
-          {
-            builder: vtkSVGCircleHandleRepresentation,
-            labels: ["handles", "moveHandle"],
-          },
-          {
-            builder: vtkSVGCloseLineRepresentation,
-            labels: ["handles", "moveHandle"],
-          },
-          {
-            builder: vtkSVGLabelRepresentation,
-            labels: ["handles"],
-          },
+          // {
+          //   builder: vtkSVGCircleHandleRepresentation,
+          //   labels: ["handles", "moveHandle"],
+          // },
+          // {
+          //   builder: vtkSVGCloseLineRepresentation,
+          //   labels: ["handles", "moveHandle"],
+          // },
+          // {
+          //   builder: vtkSVGLabelRepresentation,
+          //   labels: ["handles"],
+          // },
         ];
     }
   }; // --- Public methods -------------------------------------------------------

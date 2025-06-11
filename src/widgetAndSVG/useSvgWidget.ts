@@ -11,7 +11,7 @@ import {
   getTextPoint,
 } from "./angle";
 import type { Vector2, Vector3 } from "@kitware/vtk.js/types.js";
-
+import { createPathLine } from '@/vtk/CurveWidget/helper.js'
 const { computeWorldToDisplay, computeDisplayToWorld } = vtkInteractorObserver;
 
 /**
@@ -128,7 +128,7 @@ const createPolyLineSVG = (
   },
   points: Vector2,
   h: any
-) => { 
+) => {
   const lineString = points.map((item: Vector2) => `${item[0]},${item[1]}`).join(" ");
 
   const dashedLine = {
@@ -136,6 +136,8 @@ const createPolyLineSVG = (
     attrs: {
       stroke: "#82ff82", // 默认的颜色
       points: lineString,
+      fill: 'none',
+      "stroke-width": 1,
     },
   };
   Object.keys(textProps || {}).forEach(
@@ -145,6 +147,104 @@ const createPolyLineSVG = (
   );
   return h("polyline", dashedLine);
 };
+const createArcSVG = (
+  textProps: {
+    [key: string]: string;
+  },
+  angle: number,
+  radius: number,
+  rotate: any,
+  circleStartPoints: Vector2,
+  h: any
+) => {
+  const dashedLine = {
+    key: "circleArc",
+    attrs: {
+      stroke: "#82ff82", // 默认的颜色
+      fill: "transparent",
+      cx: circleStartPoints[0],
+      cy: circleStartPoints[1],
+      r: radius,
+      "stroke-dasharray": `${(Math.PI * radius * 2 * angle) / 360}, ${(Math.PI * radius * 2 * (360 - angle)) / 360
+        }`,
+      transform: `rotate(${rotate.angle} ${rotate.x} ${rotate.y})`,
+    },
+  };
+  Object.keys(textProps || {}).forEach(
+    (prop) =>
+      // text.setAttribute(prop, textProps[prop])
+      (dashedLine.attrs[prop] = textProps[prop])
+  );
+  return h("circle", dashedLine);
+};
+const createCurveSVG = (
+  textProps: {
+    [key: string]: string;
+  },
+  points: Vector2,
+  h: any
+) => {
+  const str = createPathLine(points)
+  const dashedLine = {
+    key: "curveLine",
+    attrs: {
+      stroke: "#82ff82", // 默认的颜色
+      fill: "transparent",
+      d: str
+    },
+  };
+  Object.keys(textProps || {}).forEach(
+    (prop) =>
+      // text.setAttribute(prop, textProps[prop])
+      (dashedLine.attrs[prop] = textProps[prop])
+  );
+  return h("path", dashedLine);
+}
+const createCrossLineSVG = (textProps: {
+  [key: string]: string;
+},
+  points: Array<Vector2>,
+  h: any) => {
+  let str = ``
+  const p0 = points[0];
+  const p1 = points[1];
+  if (p0 && p1) {
+    for (let i = 0; i < points.length; i++) {
+      // 画双向线
+      const coord: Vector2 = points[i];
+      if (i % 2 === 0 && i < 3) {
+        const nextCoord = points[i + 1];
+        if (!nextCoord) continue;
+        console.log("----coord", i, i+1, coord, nextCoord);
+        
+        str += `M ${coord[0]} ${coord[1]} L ${nextCoord[0]} ${nextCoord[1]} `;
+        // const lineProps = {
+        //   ...model.lineProps,
+        //   x1: coord[0],
+        //   y1: winHeight - coord[1],
+        //   x2: nextCoord[0],
+        //   y2: winHeight - nextCoord[1],
+        // };
+
+      }
+    }
+  }
+
+  const dashedLine = {
+    key: "crossLine",
+    attrs: {
+      stroke: "#82ff82", // 默认的颜色
+      fill: "transparent",
+      d: str
+    },
+  };
+  Object.keys(textProps || {}).forEach(
+    (prop) =>
+      // text.setAttribute(prop, textProps[prop])
+      (dashedLine.attrs[prop] = textProps[prop])
+  );
+  return h("path", dashedLine);
+}
 // 动态计算偏移量dx和dy的函数
 const computeDxAndDy = (coords: Array<Vector2>) => {
   const coords2d = coords[0];
@@ -255,7 +355,21 @@ export const useWidgetAndSVG = ({ widgetManager }: any) => {
           nodes.push(createCircleSVG({},
             coord, h))
         })
-        nodes.push(createPolyLineSVG({},data.coords, h))
+        if (
+          widget.getClassName() === "vtkDistanceWidget" ||
+          widget.getClassName() === "vtkPolyLineWidget" ||
+          widget.getClassName() === 'vtkAngleWidget' ||
+          widget.getClassName() === "vtkSplineWidget"
+        ) {
+          nodes.push(createPolyLineSVG({}, data.coords, h))
+        }
+        if (widget.getClassName() === "vtkCurveWidget") {
+          nodes.push(createCurveSVG({}, data.coords, h))
+        }
+        if (widget.getClassName() === "vtkBirectionalWidget") {
+          nodes.push(createCrossLineSVG({}, data.coords, h))
+        }
+        // 
         if (!handle.getVisibility()) return { nodes, labels };
         if (!data || data.coords.length < 2) return { nodes, labels };
         const [x1, y1] = data.coords[0];
@@ -312,6 +426,7 @@ export const useWidgetAndSVG = ({ widgetManager }: any) => {
               angle,
               coords2th
             );
+            nodes.push(createArcSVG({}, angle, radius, rotate, [coords2th[0], coords2th[1]], h))
             data.text = widget?.getMeasure() + degree;
             // console.log("----textPoint", textPoint);
             endPoints = [textPoint.x, textPoint.y];

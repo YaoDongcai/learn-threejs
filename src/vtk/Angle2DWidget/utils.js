@@ -1,8 +1,8 @@
-import vtkMath from "@kitware/vtk.js/Common/Core/Math/index.js";
-const {
+import {
   subtract,
-  angleBetweenVectors,
-} = vtkMath;
+  angleBetweenVectors
+} from "@kitware/vtk.js/Common/Core/Math";
+
 export function calculateAngle(point1Origin, point2Origin, point3Origin) {
   const vec1 = [0, 0, 0];
   const vec2 = [0, 0, 0];
